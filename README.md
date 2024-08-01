@@ -1,3 +1,7 @@
 in development
 
-cross platform file scanner, written in go.
+loads files to sqlite db
+
+features:
+ * [pure go ncruces/go-sqlite3 driver](https://github.com/ncruces/go-sqlite3)
+ * unsafe recursive async function
