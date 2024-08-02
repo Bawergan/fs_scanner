@@ -3,7 +3,6 @@ package tools
 import (
 	. "fs_scan/db"
 	"io/fs"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -19,10 +18,11 @@ func contains(s string, args []string) bool {
 	return false
 }
 
-func worker(db *Database, root string, dirWg *sync.WaitGroup) {
+func worker(root string, dirWg *sync.WaitGroup, fileHandler func(fs.DirEntry, string)) {
 	if contains(root, []string{`/mnt/c/ProgramData`, `/mnt/c/Windows`}) {
 		return
 	}
+
 	dirWg.Add(1)
 	defer dirWg.Done()
 	dirEnt, err := os.ReadDir(root)
@@ -35,12 +35,12 @@ func worker(db *Database, root string, dirWg *sync.WaitGroup) {
 			continue
 		}
 		if ent.IsDir() {
-			go worker(db, filepath.Join(root, ent.Name()), dirWg)
+			worker(filepath.Join(root, ent.Name()), dirWg, fileHandler)
 		} else {
 			fileWg.Add(1)
 			go func() {
 				defer fileWg.Done()
-				handleFile(ent, db, root)
+				fileHandler(ent, root)
 			}()
 		}
 	}
@@ -61,20 +61,20 @@ func handleFile(file fs.DirEntry, db *Database, path string) {
 	}
 	db.AddQueryToGroup(q.ConvertToGeneric())
 }
-
-func ReloadDb(db *Database){
-
+func scanFS(path string, fileHandler func(fs.DirEntry, string)) {
+	var dirWg sync.WaitGroup
+	worker(path, &dirWg, fileHandler)
+	dirWg.Wait()
+}
+func ReloadDb(db *Database) {
+    db.Exec("DELETE FROM files")
 	var readerWg sync.WaitGroup
+	readerWg.Add(1)
 	go func() {
-		readerWg.Add(1)
 		defer readerWg.Done()
 		db.StartInsertGroupingManager()
 	}()
-	var dirWg sync.WaitGroup
-	worker(db, "/home", &dirWg)
-	log.Println("waiting for workers")
-	dirWg.Wait()
-	log.Println("waiting for reader")
+	scanFS("/home", func(de fs.DirEntry, s string) { handleFile(de, db, s) })
 	db.StopGroupManager()
 	readerWg.Wait()
 }

@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 	. "fs_scan/db"
+	lt "fs_scan/tools"
 	"os"
 	"strings"
-    lt "fs_scan/tools"
 )
 
 const file_db_name = "files"
@@ -45,9 +45,14 @@ func (a *App) LaunchCLI() {
 			}
 		case "reload data":
 			fmt.Println("Reloading data...")
-            a.reloadData()
+			a.reloadData()
 		case "update data":
 			fmt.Println("Updating data...")
+        case "count":
+            err := a.countEnteries()
+            if err != nil{
+                fmt.Println(err)
+            }
 		case "help":
 			fmt.Println("Available commands:")
 			fmt.Println("- help")
@@ -118,4 +123,28 @@ func (a *App) reloadData() {
 
 func (a *App) updateData() {
 
+}
+
+func (a *App) countEnteries() error {
+
+	rows, err := a.db.Query("SELECT count(*) FROM files")
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next(){
+        count := 0
+		err = rows.Scan(&count)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Count: %v\n", count)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return err
+	}
+    return nil
 }

@@ -4,12 +4,11 @@ import (
 	"os"
 	"sync"
 	"testing"
-	"time"
 )
 
 func TestOpenCloseDatabase(t *testing.T) {
-	db, err := OpenDatabase("./test.db")
-	defer os.Remove("./test.db")
+	db, err := OpenDatabase("./test")
+	defer os.Remove("./test")
 	if err != nil {
 		t.Errorf("OpenDatabase() returned an error: %v", err)
 	}
@@ -23,12 +22,12 @@ func TestOpenCloseDatabase(t *testing.T) {
 }
 
 func TestCreateTable(t *testing.T) {
-	db, err := OpenDatabase("./test.db")
+	db, err := OpenDatabase("./test")
 	if err != nil {
 		t.Errorf("OpenDatabase() returned an error: %v", err)
 	}
 	defer db.Close()
-	defer os.Remove("./test.db")
+	defer os.Remove("./test")
 
 	sqlStmt := `
         CREATE TABLE IF NOT EXISTS test_table (
@@ -63,12 +62,12 @@ func TestCreateTable(t *testing.T) {
 }
 
 func TestInsert(t *testing.T) {
-	db, err := OpenDatabase("./test.db")
+	db, err := OpenDatabase("./test")
 	if err != nil {
 		t.Errorf("OpenDatabase() returned an error: %v", err)
 	}
 	defer db.Close()
-	defer os.Remove("./test.db")
+	defer os.Remove("./test")
 
 	sqlStmt := `
         CREATE TABLE IF NOT EXISTS test_table (
@@ -92,12 +91,12 @@ func TestInsert(t *testing.T) {
 }
 
 func TestInsertGroup(t *testing.T) {
-	db, err := OpenDatabase("./test.db")
+	db, err := OpenDatabase("./test")
 	if err != nil {
 		t.Errorf("OpenDatabase() returned an error: %v", err)
 	}
 	defer db.Close()
-	defer os.Remove("./test.db")
+	defer os.Remove("./test")
 
 	sqlStmt := `
         CREATE TABLE IF NOT EXISTS test_table (
@@ -125,12 +124,12 @@ func TestInsertGroup(t *testing.T) {
 }
 
 func BenchmarkInsert(b *testing.B) {
-	db, err := OpenDatabase("./test.db")
+	db, err := OpenDatabase("./test")
 	if err != nil {
 		b.Errorf("OpenDatabase() returned an error: %v", err)
 	}
 	defer db.Close()
-	defer os.Remove("./test.db")
+	defer os.Remove("./test")
 
 	sqlStmt := `
         CREATE TABLE IF NOT EXISTS test_table (
@@ -152,12 +151,12 @@ func BenchmarkInsert(b *testing.B) {
 	}
 }
 func BenchmarkInsertGO(b *testing.B) {
-	db, err := OpenDatabase("./test.db")
+	db, err := OpenDatabase("./test")
 	if err != nil {
 		b.Errorf("OpenDatabase() returned an error: %v", err)
 	}
 	defer db.Close()
-	defer os.Remove("./test.db")
+	defer os.Remove("./test")
 
 	sqlStmt := `
         CREATE TABLE IF NOT EXISTS test_table (
@@ -182,19 +181,19 @@ func BenchmarkInsertGO(b *testing.B) {
 }
 
 func BenchmarkAutoGroupInsert(b *testing.B) {
-	db, err := OpenDatabase("./test.db")
+	db, err := OpenDatabase("./test")
 	if err != nil {
 		b.Errorf("OpenDatabase() returned an error: %v", err)
 	}
 	defer db.Close()
-	defer os.Remove("./test.db")
+	defer os.Remove("./test")
 
 	sqlStmt := `
-        CREATE TABLE IF NOT EXISTS test_table (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL
-        );
-    `
+		        CREATE TABLE IF NOT EXISTS test_table (
+		            id INTEGER PRIMARY KEY AUTOINCREMENT,
+		            name TEXT NOT NULL
+		        );
+		    `
 	err = db.CreateTable(sqlStmt)
 	if err != nil {
 		b.Errorf("CreateTable() returned an error: %v", err)
@@ -202,7 +201,6 @@ func BenchmarkAutoGroupInsert(b *testing.B) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() { defer wg.Done(); db.StartInsertGroupingManager() }()
-	time.Sleep(time.Millisecond)
 	b.ResetTimer()
 	go func() {
 		for i := 0; i < b.N; i++ {

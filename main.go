@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-
 func temp() {
 	db, err := OpenDatabase("./files.db")
 	if err != nil {

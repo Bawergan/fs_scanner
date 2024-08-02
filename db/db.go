@@ -39,8 +39,6 @@ type Database struct {
 }
 
 func OpenDatabase(filename string) (*Database, error) {
-	log.Println("db: OpenDatabase called")
-
 	db, err := sql.Open("sqlite3", filename+".db")
 	if err != nil {
 		return nil, err
@@ -53,8 +51,6 @@ func OpenDatabase(filename string) (*Database, error) {
 }
 
 func (d *Database) Close() error {
-	log.Println("db: db.Close called")
-
 	if d.db != nil {
 		err := d.db.Close()
 		return err
@@ -64,8 +60,6 @@ func (d *Database) Close() error {
 }
 
 func (d *Database) CreateTable(sqlStmt string) error {
-	log.Println("db: db.CreateTable called")
-
 	_, err := d.db.Exec(sqlStmt)
 	if err != nil {
 		return err
@@ -103,7 +97,7 @@ func (d *Database) Insert(query GenericQuery) error {
 }
 
 func (d *Database) InsertGroup(queryGroup []GenericQuery) error {
-	log.Println(len(queryGroup))
+    log.Println(len(queryGroup))
 	d.dbMu.Lock()
 	defer d.dbMu.Unlock()
 	tx, err := d.db.Begin()
@@ -143,7 +137,7 @@ func (d *Database) StartInsertGroupingManager() {
 	d.groupManagerLoop = true
 	nextTurnOff := 1
 
-	maxlen := 10000
+	maxlen := 100000
 	var group []GenericQuery
 	for d.groupManagerLoop || len(group) > 0 {
 		//log.Println(d.groupManagerLoop, len(group), nextTurnOff)
@@ -160,7 +154,7 @@ func (d *Database) StartInsertGroupingManager() {
 			group = append(group, q)
 		case <-time.After(time.Millisecond * 30):
 			if len(group) == 0 && nextTurnOff != 10 {
-				time.Sleep(time.Millisecond * 500)
+				time.Sleep(time.Millisecond * 100)
 				nextTurnOff += 1
 			} else {
 				d.groupManagerLoop = false
@@ -175,4 +169,8 @@ func (d *Database) StartInsertGroupingManager() {
 }
 func (d *Database) Query(query string) (*sql.Rows, error) {
 	return d.db.Query(query)
+}
+
+func (d *Database) Exec(query string) (sql.Result, error){
+    return d.db.Exec(query)
 }
