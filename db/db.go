@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 	"sync"
 	"time"
 
@@ -40,15 +39,13 @@ type Database struct {
 }
 
 func OpenDatabase(filename string) (*Database, error) {
+	log.Println("db: OpenDatabase called")
 
-	// Remove the existing database file, if any
-	os.Remove(filename)
-
-	// Open a new SQLite3 database
-	db, err := sql.Open("sqlite3", filename)
+	db, err := sql.Open("sqlite3", filename+".db")
 	if err != nil {
 		return nil, err
 	}
+
 	return &Database{
 		db:      db,
 		groupCh: make(chan GenericQuery),
@@ -56,22 +53,28 @@ func OpenDatabase(filename string) (*Database, error) {
 }
 
 func (d *Database) Close() error {
+	log.Println("db: db.Close called")
+
 	if d.db != nil {
-		return d.db.Close()
+		err := d.db.Close()
+		return err
 	}
+
 	return fmt.Errorf("trying to close closed db")
 }
 
 func (d *Database) CreateTable(sqlStmt string) error {
+	log.Println("db: db.CreateTable called")
+
 	_, err := d.db.Exec(sqlStmt)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func (d *Database) Insert(query GenericQuery) error {
-
 	d.dbMu.Lock()
 	defer d.dbMu.Unlock()
 
@@ -133,8 +136,8 @@ func (d *Database) InsertGroup(queryGroup []GenericQuery) error {
 func (d *Database) AddQueryToGroup(query GenericQuery) {
 	d.groupCh <- query
 }
-func (d *Database) StopGroupManager(){
-    d.groupManagerLoop = false
+func (d *Database) StopGroupManager() {
+	d.groupManagerLoop = false
 }
 func (d *Database) StartInsertGroupingManager() {
 	d.groupManagerLoop = true
