@@ -5,10 +5,18 @@ import (
 	"sync"
 	"testing"
 )
+const root = "./tmp_testing/"
+const dbFile = root + "test_db"
+
+func TestMain(m *testing.M) {
+    exit:=m.Run()
+    os.RemoveAll(root)
+	os.Exit(exit)
+}
 
 func TestOpenCloseDatabase(t *testing.T) {
-	db, err := OpenDatabase("./test")
-	defer os.Remove("./test")
+	db, err := OpenDatabase(dbFile)
+	defer os.Remove(dbFile)
 	if err != nil {
 		t.Errorf("OpenDatabase() returned an error: %v", err)
 	}
@@ -20,14 +28,11 @@ func TestOpenCloseDatabase(t *testing.T) {
 		t.Errorf("db.Close() returned an error: %v", err)
 	}
 }
-
-func TestCreateTable(t *testing.T) {
-	db, err := OpenDatabase("./test")
+func prepDb() (*Database, error) {
+	db, err := OpenDatabase(dbFile)
 	if err != nil {
-		t.Errorf("OpenDatabase() returned an error: %v", err)
+		return nil, err
 	}
-	defer db.Close()
-	defer os.Remove("./test")
 
 	sqlStmt := `
         CREATE TABLE IF NOT EXISTS test_table (
@@ -37,10 +42,18 @@ func TestCreateTable(t *testing.T) {
     `
 	err = db.CreateTable(sqlStmt)
 	if err != nil {
-		t.Errorf("CreateTable() returned an error: %v", err)
+		return nil, err
 	}
-
-	sqlStmt = `
+	return db, nil
+}
+func TestCreateTable(t *testing.T) {
+	db, err := prepDb()
+	if err != nil {
+		t.Errorf("db prep failed: %s", err)
+	}
+	defer db.Close()
+	defer os.Remove(dbFile)
+	sqlStmt := `
         CREATE TABLE test_table (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL
@@ -62,23 +75,12 @@ func TestCreateTable(t *testing.T) {
 }
 
 func TestInsert(t *testing.T) {
-	db, err := OpenDatabase("./test")
+	db, err := prepDb()
 	if err != nil {
-		t.Errorf("OpenDatabase() returned an error: %v", err)
+		t.Errorf("db prep failed: %s", err)
 	}
 	defer db.Close()
-	defer os.Remove("./test")
-
-	sqlStmt := `
-        CREATE TABLE IF NOT EXISTS test_table (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL
-        );
-    `
-	err = db.CreateTable(sqlStmt)
-	if err != nil {
-		t.Errorf("CreateTable() returned an error: %v", err)
-	}
+	defer os.Remove(dbFile)
 
 	err = db.Insert(GenericQuery{query: "INSERT INTO test_table (name) VALUES (?)", args: []any{"test_name"}})
 	if err != nil {
@@ -91,23 +93,12 @@ func TestInsert(t *testing.T) {
 }
 
 func TestInsertGroup(t *testing.T) {
-	db, err := OpenDatabase("./test")
+	db, err := prepDb()
 	if err != nil {
-		t.Errorf("OpenDatabase() returned an error: %v", err)
+		t.Errorf("db prep failed: %s", err)
 	}
 	defer db.Close()
-	defer os.Remove("./test")
-
-	sqlStmt := `
-        CREATE TABLE IF NOT EXISTS test_table (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL
-        );
-    `
-	err = db.CreateTable(sqlStmt)
-	if err != nil {
-		t.Errorf("CreateTable() returned an error: %v", err)
-	}
+	defer os.Remove(dbFile)
 	var queryGroup []GenericQuery
 	for range 50 {
 		queryGroup = append(queryGroup, GenericQuery{query: "INSERT INTO test_table (name) VALUES (?)", args: []any{"test_name"}})
@@ -124,23 +115,12 @@ func TestInsertGroup(t *testing.T) {
 }
 
 func BenchmarkInsert(b *testing.B) {
-	db, err := OpenDatabase("./test")
+	db, err := prepDb()
 	if err != nil {
-		b.Errorf("OpenDatabase() returned an error: %v", err)
+		b.Errorf("db prep failed: %s", err)
 	}
 	defer db.Close()
-	defer os.Remove("./test")
-
-	sqlStmt := `
-        CREATE TABLE IF NOT EXISTS test_table (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL
-        );
-    `
-	err = db.CreateTable(sqlStmt)
-	if err != nil {
-		b.Errorf("CreateTable() returned an error: %v", err)
-	}
+	defer os.Remove(dbFile)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -151,23 +131,12 @@ func BenchmarkInsert(b *testing.B) {
 	}
 }
 func BenchmarkInsertGO(b *testing.B) {
-	db, err := OpenDatabase("./test")
+	db, err := prepDb()
 	if err != nil {
-		b.Errorf("OpenDatabase() returned an error: %v", err)
+		b.Errorf("db prep failed: %s", err)
 	}
 	defer db.Close()
-	defer os.Remove("./test")
-
-	sqlStmt := `
-        CREATE TABLE IF NOT EXISTS test_table (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL
-        );
-    `
-	err = db.CreateTable(sqlStmt)
-	if err != nil {
-		b.Errorf("CreateTable() returned an error: %v", err)
-	}
+	defer os.Remove(dbFile)
 	var wg sync.WaitGroup
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -181,23 +150,12 @@ func BenchmarkInsertGO(b *testing.B) {
 }
 
 func BenchmarkAutoGroupInsert(b *testing.B) {
-	db, err := OpenDatabase("./test")
+	db, err := prepDb()
 	if err != nil {
-		b.Errorf("OpenDatabase() returned an error: %v", err)
+		b.Errorf("db prep failed: %s", err)
 	}
 	defer db.Close()
-	defer os.Remove("./test")
-
-	sqlStmt := `
-		        CREATE TABLE IF NOT EXISTS test_table (
-		            id INTEGER PRIMARY KEY AUTOINCREMENT,
-		            name TEXT NOT NULL
-		        );
-		    `
-	err = db.CreateTable(sqlStmt)
-	if err != nil {
-		b.Errorf("CreateTable() returned an error: %v", err)
-	}
+	defer os.Remove(dbFile)
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() { defer wg.Done(); db.StartInsertGroupingManager() }()

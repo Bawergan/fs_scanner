@@ -48,11 +48,11 @@ func (a *App) LaunchCLI() {
 			a.reloadData()
 		case "update data":
 			fmt.Println("Updating data...")
-        case "count":
-            err := a.countEnteries()
-            if err != nil{
-                fmt.Println(err)
-            }
+		case "count":
+			err := a.countEnteries()
+			if err != nil {
+				fmt.Println(err)
+			}
 		case "help":
 			fmt.Println("Available commands:")
 			fmt.Println("- help")
@@ -97,6 +97,7 @@ func (a *App) createNewFileDb() error {
 	a.db = db
 	return nil
 }
+
 func (a *App) openFileDb() error {
 	if a.db != nil {
 		return errors.New("db already open!")
@@ -108,6 +109,7 @@ func (a *App) openFileDb() error {
 	a.db = db
 	return nil
 }
+
 func (a *App) exitApp() error {
 	if a.db != nil {
 		err := a.db.Close()
@@ -117,8 +119,9 @@ func (a *App) exitApp() error {
 	}
 	return nil
 }
+
 func (a *App) reloadData() {
-    lt.ReloadDb(a.db)
+	lt.ReloadDb(a.db)
 }
 
 func (a *App) updateData() {
@@ -133,8 +136,8 @@ func (a *App) countEnteries() error {
 	}
 	defer rows.Close()
 
-	for rows.Next(){
-        count := 0
+	for rows.Next() {
+		count := 0
 		err = rows.Scan(&count)
 		if err != nil {
 			return err
@@ -146,5 +149,5 @@ func (a *App) countEnteries() error {
 	if err != nil {
 		return err
 	}
-    return nil
+	return nil
 }

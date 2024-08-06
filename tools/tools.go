@@ -67,14 +67,14 @@ func scanFS(path string, fileHandler func(fs.DirEntry, string)) {
 	dirWg.Wait()
 }
 func ReloadDb(db *Database) {
-    db.Exec("DELETE FROM files")
+	db.Exec("DELETE FROM files")
 	var readerWg sync.WaitGroup
 	readerWg.Add(1)
 	go func() {
 		defer readerWg.Done()
 		db.StartInsertGroupingManager()
 	}()
-	scanFS("/home", func(de fs.DirEntry, s string) { handleFile(de, db, s) })
+	scanFS("/", func(de fs.DirEntry, s string) { handleFile(de, db, s) })
 	db.StopGroupManager()
 	readerWg.Wait()
 }

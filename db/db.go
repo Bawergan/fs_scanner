@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -36,17 +38,26 @@ type Database struct {
 	dbMu             sync.Mutex
 	groupCh          chan GenericQuery
 	groupManagerLoop bool
+	dbPath           string
 }
 
 func OpenDatabase(filename string) (*Database, error) {
+	err := os.MkdirAll(filepath.Dir(filename), 0755)
+	if err != nil {
+		return nil, err
+	}
 	db, err := sql.Open("sqlite3", filename+".db")
 	if err != nil {
+		if err.Error() == "sqlite3: unable to open database file" {
+
+		}
 		return nil, err
 	}
 
 	return &Database{
 		db:      db,
 		groupCh: make(chan GenericQuery),
+		dbPath:  filename,
 	}, nil
 }
 
@@ -97,7 +108,7 @@ func (d *Database) Insert(query GenericQuery) error {
 }
 
 func (d *Database) InsertGroup(queryGroup []GenericQuery) error {
-    log.Println(len(queryGroup))
+	log.Println(len(queryGroup))
 	d.dbMu.Lock()
 	defer d.dbMu.Unlock()
 	tx, err := d.db.Begin()
@@ -126,7 +137,6 @@ func (d *Database) InsertGroup(queryGroup []GenericQuery) error {
 	}
 	return nil
 }
-
 func (d *Database) AddQueryToGroup(query GenericQuery) {
 	d.groupCh <- query
 }
@@ -171,6 +181,6 @@ func (d *Database) Query(query string) (*sql.Rows, error) {
 	return d.db.Query(query)
 }
 
-func (d *Database) Exec(query string) (sql.Result, error){
-    return d.db.Exec(query)
+func (d *Database) Exec(query string) (sql.Result, error) {
+	return d.db.Exec(query)
 }

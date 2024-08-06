@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-const path = "./tmp"
+const path = "./tmp_testing"
 
 func TestFSScan(t *testing.T) {
 	type testcase struct {
@@ -31,10 +31,10 @@ func TestFSScan(t *testing.T) {
 }
 
 func BenchmarkFSScan(b *testing.B) {
-    b.Log("setting fs...")
+	b.Log("setting fs...")
 	fcount := populateFS(b, path, 5, 6, 40)
 	defer os.RemoveAll(path)
-    b.Log("running bench...")
+	b.Log("running bench...")
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		var counter atomic.Int64
