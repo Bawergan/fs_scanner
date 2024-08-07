@@ -4,14 +4,14 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	. "fs_scan/data"
+	data "fs_scan/data"
 	lt "fs_scan/tools"
 	"os"
 	"strings"
 )
 
 type App struct {
-	db *FileDb
+	db *data.FileDb
 }
 
 func NewApp() *App {
@@ -67,7 +67,7 @@ func (a *App) openFileDb() error {
 	if a.db != nil {
 		return errors.New("db already open")
 	}
-	db, err := CreateFileDb()
+	db, err := data.CreateFileDb()
 	if err != nil {
 		return err
 	}

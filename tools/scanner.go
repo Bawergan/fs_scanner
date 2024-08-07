@@ -1,8 +1,8 @@
 package tools
 
 import (
-	"fs_scan/data"
-	"fs_scan/model"
+	data "fs_scan/data"
+	model "fs_scan/model"
 	"io/fs"
 	"os"
 	"path/filepath"

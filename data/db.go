@@ -3,7 +3,7 @@ package data
 import (
 	"database/sql"
 	"fmt"
-	. "fs_scan/model"
+	model "fs_scan/model"
 	"log"
 	"os"
 	"path/filepath"
@@ -14,7 +14,7 @@ import (
 	_ "github.com/ncruces/go-sqlite3/embed"
 )
 
-const dbFilePath = `../../db`
+const dbFilePath = `./../store`
 const dbName = `files`
 const fileDbTable = `files (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,7 +26,7 @@ const fileDbTable = `files (
 type FileDb struct {
 	db               *sql.DB
 	dbMu             sync.Mutex
-	groupCh          chan FileModel
+	groupCh          chan model.FileModel
 	groupManagerLoop bool
 }
 
@@ -49,7 +49,7 @@ func CreateFileDb() (*FileDb, error) {
 
 	return &FileDb{
 		db:      db,
-		groupCh: make(chan FileModel),
+		groupCh: make(chan model.FileModel),
 	}, nil
 }
 
@@ -61,7 +61,7 @@ func (d *FileDb) Close() error {
 	return fmt.Errorf("trying to close closed db")
 }
 
-func (d *FileDb) Insert(file FileModel) error {
+func (d *FileDb) Insert(file model.FileModel) error {
 	d.dbMu.Lock()
 	defer d.dbMu.Unlock()
 
@@ -71,7 +71,7 @@ func (d *FileDb) Insert(file FileModel) error {
 	}
 	defer tx.Rollback()
 
-	stmt, err := tx.Prepare(FileModelQuery)
+	stmt, err := tx.Prepare(model.FileModelQuery)
 	if err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func (d *FileDb) Insert(file FileModel) error {
 	return nil
 }
 
-func (d *FileDb) InsertGroup(fileGroup []FileModel) error {
+func (d *FileDb) InsertGroup(fileGroup []model.FileModel) error {
 	log.Println(len(fileGroup))
 
 	d.dbMu.Lock()
@@ -103,7 +103,7 @@ func (d *FileDb) InsertGroup(fileGroup []FileModel) error {
 
 	for _, file := range fileGroup {
 
-		stmt, err := tx.Prepare(FileModelQuery)
+		stmt, err := tx.Prepare(model.FileModelQuery)
 		if err != nil {
 			return err
 		}
@@ -122,7 +122,7 @@ func (d *FileDb) InsertGroup(fileGroup []FileModel) error {
 	return nil
 }
 
-func (d *FileDb) AddQueryToGroup(query FileModel) {
+func (d *FileDb) AddQueryToGroup(query model.FileModel) {
 	d.groupCh <- query
 }
 
@@ -135,7 +135,7 @@ func (d *FileDb) StartInsertGroupingManager() {
 	nextTurnOff := 1
 
 	maxlen := 100000
-	var group []FileModel
+	var group []model.FileModel
 	for d.groupManagerLoop || len(group) > 0 {
 		//log.Println(d.groupManagerLoop, len(group), nextTurnOff)
 
@@ -161,7 +161,7 @@ func (d *FileDb) StartInsertGroupingManager() {
 				if err != nil {
 					log.Fatal(err)
 				}
-				group = []FileModel{}
+				group = []model.FileModel{}
 			}
 		}
 	}
