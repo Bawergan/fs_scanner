@@ -1,10 +1,10 @@
 package main
 
 import (
-	app "fs_scan/app"
+	cli "fs_scan/cli"
 )
 
 func main() {
-	app := app.NewApp()
+	app := cli.NewApp()
 	app.LaunchCLI()
 }
