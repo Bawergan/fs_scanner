@@ -4,17 +4,14 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	. "fs_scan/db"
+	. "fs_scan/data"
 	lt "fs_scan/tools"
 	"os"
 	"strings"
 )
 
-const file_db_name = "files"
-const store_path = "./store/"
-
 type App struct {
-	db *Database
+	db *FileDb
 }
 
 func NewApp() *App {
@@ -29,13 +26,6 @@ func (a *App) LaunchCLI() {
 		command = strings.TrimSpace(command)
 
 		switch command {
-		case "create file db":
-			fmt.Println("Creating file db...")
-
-			err := a.createNewFileDb()
-			if err != nil {
-				fmt.Println(err)
-			}
 		case "open file db":
 			fmt.Println("Opening file db...")
 
@@ -73,36 +63,11 @@ func (a *App) LaunchCLI() {
 	}
 }
 
-func (a *App) createNewFileDb() error {
-	if a.db != nil {
-		return errors.New("db already open!")
-	}
-	db, err := OpenDatabase(store_path + file_db_name)
-	if err != nil {
-		return err
-	}
-
-	sqlStmt := `
-    CREATE TABLE IF NOT EXISTS files (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        created_at DATETIME NOT NULL,
-        tags TEXT NOT NULL
-    );
-    `
-	err = db.CreateTable(sqlStmt)
-	if err != nil {
-		return err
-	}
-	a.db = db
-	return nil
-}
-
 func (a *App) openFileDb() error {
 	if a.db != nil {
-		return errors.New("db already open!")
+		return errors.New("db already open")
 	}
-	db, err := OpenDatabase(store_path + file_db_name)
+	db, err := CreateFileDb()
 	if err != nil {
 		return err
 	}
@@ -129,25 +94,10 @@ func (a *App) updateData() {
 }
 
 func (a *App) countEnteries() error {
-
-	rows, err := a.db.Query("SELECT count(*) FROM files")
+	count, err := a.db.CountEnteries()
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
-
-	for rows.Next() {
-		count := 0
-		err = rows.Scan(&count)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("Count: %v\n", count)
-	}
-
-	err = rows.Err()
-	if err != nil {
-		return err
-	}
+	fmt.Printf("Count: %v\n", count)
 	return nil
 }

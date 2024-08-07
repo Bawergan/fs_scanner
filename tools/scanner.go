@@ -1,7 +1,8 @@
 package tools
 
 import (
-	. "fs_scan/db"
+	"fs_scan/data"
+	"fs_scan/model"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -47,26 +48,31 @@ func worker(root string, dirWg *sync.WaitGroup, fileHandler func(fs.DirEntry, st
 	fileWg.Wait()
 }
 
-func handleFile(file fs.DirEntry, db *Database, path string) {
+func handleFile(file fs.DirEntry, db *data.FileDb, path string) {
 	info, err := file.Info()
 	if err != nil {
 		return
 	}
+	if !contains(file.Name(), []string{`.jpg`, `.png`, `.jpeg`, `.pdf`}) {
+		return
+	}
 	createdAt := info.ModTime()
 
-	q := FileInsertionQuery{
+	q := model.FileModel{
 		Path:    filepath.Join(path, info.Name()),
 		ModTime: createdAt,
 		Tags:    []string{""},
 	}
-	db.AddQueryToGroup(q.ConvertToGeneric())
+	db.AddQueryToGroup(q)
 }
+
 func scanFS(path string, fileHandler func(fs.DirEntry, string)) {
 	var dirWg sync.WaitGroup
 	worker(path, &dirWg, fileHandler)
 	dirWg.Wait()
 }
-func ReloadDb(db *Database) {
+
+func ReloadDb(db *data.FileDb) {
 	db.Exec("DELETE FROM files")
 	var readerWg sync.WaitGroup
 	readerWg.Add(1)

@@ -32,7 +32,7 @@ func TestFSScan(t *testing.T) {
 
 func BenchmarkFSScan(b *testing.B) {
 	b.Log("setting fs...")
-	fcount := populateFS(b, path, 5, 6, 40)
+	fcount := populateFS(b, path, 3, 5, 20)
 	defer os.RemoveAll(path)
 	b.Log("running bench...")
 	b.ResetTimer()
