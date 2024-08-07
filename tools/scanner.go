@@ -80,7 +80,7 @@ func ReloadDb(db *data.FileDb) {
 		defer readerWg.Done()
 		db.StartInsertGroupingManager()
 	}()
-	scanFS("/", func(de fs.DirEntry, s string) { handleFile(de, db, s) })
+	scanFS("/mnt/c/Users/sergey/Pictures/temp/", func(de fs.DirEntry, s string) { handleFile(de, db, s) })
 	db.StopGroupManager()
 	readerWg.Wait()
 }

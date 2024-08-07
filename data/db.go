@@ -2,6 +2,7 @@ package data
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	model "fs_scan/model"
 	"log"
@@ -14,7 +15,7 @@ import (
 	_ "github.com/ncruces/go-sqlite3/embed"
 )
 
-const dbFilePath = `./../store`
+const dbFilePath = `./store`
 const dbName = `files`
 const fileDbTable = `files (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -77,7 +78,12 @@ func (d *FileDb) Insert(file model.FileModel) error {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(file.Path, file.ModTime, file.Tags)
+	tags, err := json.Marshal(file.Tags)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = stmt.Exec(file.Path, file.ModTime, tags)
 	if err != nil {
 		return err
 	}
@@ -109,7 +115,12 @@ func (d *FileDb) InsertGroup(fileGroup []model.FileModel) error {
 		}
 		defer stmt.Close()
 
-		_, err = stmt.Exec(file.Path, file.ModTime, file.Tags)
+		tags, err := json.Marshal(file.Tags)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		_, err = stmt.Exec(file.Path, file.ModTime, tags)
 		if err != nil {
 			return err
 		}
@@ -183,9 +194,11 @@ func (d *FileDb) CountEnteries() (int, error) {
 	defer rows.Close()
 
 	count := 0
-	err = rows.Scan(&count)
-	if err != nil {
-		return -1, err
+	for rows.Next() {
+		err = rows.Scan(&count)
+		if err != nil {
+			return -1, err
+		}
 	}
 
 	err = rows.Err()
