@@ -6,6 +6,7 @@ import (
 	"fmt"
 	data "fs_scan/data"
 	lt "fs_scan/tools"
+	"net/http"
 	"os"
 	"strings"
 )
@@ -26,6 +27,12 @@ func (a *App) LaunchCLI() {
 		command = strings.TrimSpace(command)
 
 		switch command {
+		case "serve":
+			fmt.Println("Statring server...")
+			err := a.serve()
+			if err != nil {
+				fmt.Println(err)
+			}
 		case "open file db":
 			fmt.Println("Opening file db...")
 
@@ -100,4 +107,24 @@ func (a *App) countEnteries() error {
 	}
 	fmt.Printf("Count: %v\n", count)
 	return nil
+}
+
+func (a *App) reloadHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		// Call your function here
+		lt.ReloadDb(a.db)
+
+		// Respond to the client
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "Update performed successfully")
+	} else {
+		// If the method is not GET, return a 405 Method Not Allowed
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		fmt.Fprintln(w, "Method not allowed")
+	}
+}
+
+func (a *App) serve() error {
+	http.HandleFunc("/api/reload", a.reloadHandler)
+	return http.ListenAndServe(":5000", nil)
 }
