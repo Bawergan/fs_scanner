@@ -20,6 +20,7 @@ const dbName = `files`
 const fileDbTable = `files (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
+		format TEXT NOT NULL,
         created_at DATETIME NOT NULL,
         tags TEXT NOT NULL
     )`
@@ -83,7 +84,7 @@ func (d *FileDb) Insert(file model.FileModel) error {
 		log.Fatal(err)
 	}
 
-	_, err = stmt.Exec(file.Path, file.ModTime, tags)
+	_, err = stmt.Exec(file.Path, file.Format, file.ModTime, tags)
 	if err != nil {
 		return err
 	}
@@ -120,7 +121,7 @@ func (d *FileDb) InsertGroup(fileGroup []model.FileModel) error {
 			log.Fatal(err)
 		}
 
-		_, err = stmt.Exec(file.Path, file.ModTime, tags)
+		_, err = stmt.Exec(file.Path, file.Format, file.ModTime, tags)
 		if err != nil {
 			return err
 		}

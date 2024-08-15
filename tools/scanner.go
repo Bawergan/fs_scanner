@@ -60,6 +60,7 @@ func handleFile(file fs.DirEntry, db *data.FileDb, path string) {
 
 	q := model.FileModel{
 		Path:    filepath.Join(path, info.Name()),
+		Format:  filepath.Ext(info.Name()),
 		ModTime: createdAt,
 		Tags:    []string{""},
 	}
@@ -80,7 +81,7 @@ func ReloadDb(db *data.FileDb) {
 		defer readerWg.Done()
 		db.StartInsertGroupingManager()
 	}()
-	scanFS("/mnt/c/Users/sergey/Pictures/temp/", func(de fs.DirEntry, s string) { handleFile(de, db, s) })
+	scanFS("/mnt/c/Users/sergey/", func(de fs.DirEntry, s string) { handleFile(de, db, s) })
 	db.StopGroupManager()
 	readerWg.Wait()
 }
