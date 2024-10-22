@@ -11,4 +11,4 @@ type FileModel struct {
 	Tags    []string
 }
 
-const FileModelQuery = "INSERT INTO files (name, string, created_at, tags) VALUES (?, ?, ?)"
+const FileModelQuery = "INSERT INTO files (name, format, created_at, tags) VALUES (?, ?, ?, ?)"

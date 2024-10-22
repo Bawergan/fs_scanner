@@ -57,9 +57,8 @@ func handleFile(file fs.DirEntry, db *data.FileDb, path string) {
 		return
 	}
 	createdAt := info.ModTime()
-
 	q := model.FileModel{
-		Path:    filepath.Join(path, info.Name()),
+		Path:    filepath.ToSlash(filepath.Join(path, info.Name())), // Используем ToSlash для унификации путей
 		Format:  filepath.Ext(info.Name()),
 		ModTime: createdAt,
 		Tags:    []string{""},
@@ -69,7 +68,16 @@ func handleFile(file fs.DirEntry, db *data.FileDb, path string) {
 
 func scanFS(path string, fileHandler func(fs.DirEntry, string)) {
 	var dirWg sync.WaitGroup
-	worker(path, &dirWg, fileHandler)
+
+	// По умолчанию сканируем диск C
+	rootPath := "C:\\"
+
+	// Если указан другой путь, используем его
+	if path != "/" {
+		rootPath = path
+	}
+
+	worker(rootPath, &dirWg, fileHandler)
 	dirWg.Wait()
 }
 
@@ -81,7 +89,7 @@ func ReloadDb(db *data.FileDb) {
 		defer readerWg.Done()
 		db.StartInsertGroupingManager()
 	}()
-	scanFS("/mnt/c/Users/sergey/", func(de fs.DirEntry, s string) { handleFile(de, db, s) })
+	scanFS("/", func(de fs.DirEntry, s string) { handleFile(de, db, s) })
 	db.StopGroupManager()
 	readerWg.Wait()
 }

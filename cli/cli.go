@@ -28,7 +28,7 @@ func (a *App) LaunchCLI() {
 
 		switch command {
 		case "serve":
-			fmt.Println("Statring server...")
+			fmt.Println("Starting server...")
 			err := a.serve()
 			if err != nil {
 				fmt.Println(err)
@@ -36,17 +36,17 @@ func (a *App) LaunchCLI() {
 		case "open file db":
 			fmt.Println("Opening file db...")
 
-			err := a.openFileDb()
+			err := a.OpenFileDb()
 			if err != nil {
 				fmt.Println(err)
 			}
 		case "reload data":
 			fmt.Println("Reloading data...")
-			a.reloadData()
+			a.ReloadData()
 		case "update data":
 			fmt.Println("Updating data...")
 		case "count":
-			err := a.countEnteries()
+			err := a.countEntries()
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -57,7 +57,7 @@ func (a *App) LaunchCLI() {
 		case "exit":
 			fmt.Println("Exiting CLI...")
 
-			err := a.exitApp()
+			err := a.ExitApp()
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -70,7 +70,7 @@ func (a *App) LaunchCLI() {
 	}
 }
 
-func (a *App) openFileDb() error {
+func (a *App) OpenFileDb() error {
 	if a.db != nil {
 		return errors.New("db already open")
 	}
@@ -82,7 +82,7 @@ func (a *App) openFileDb() error {
 	return nil
 }
 
-func (a *App) exitApp() error {
+func (a *App) ExitApp() error {
 	if a.db != nil {
 		err := a.db.Close()
 		if err != nil {
@@ -92,7 +92,7 @@ func (a *App) exitApp() error {
 	return nil
 }
 
-func (a *App) reloadData() {
+func (a *App) ReloadData() {
 	lt.ReloadDb(a.db)
 }
 
@@ -100,7 +100,7 @@ func (a *App) updateData() {
 
 }
 
-func (a *App) countEnteries() error {
+func (a *App) countEntries() error {
 	count, err := a.db.CountEnteries()
 	if err != nil {
 		return err
@@ -127,4 +127,11 @@ func (a *App) reloadHandler(w http.ResponseWriter, r *http.Request) {
 func (a *App) serve() error {
 	http.HandleFunc("/api/reload", a.reloadHandler)
 	return http.ListenAndServe(":5000", nil)
+}
+
+func (a *App) Serve() error {
+	if a.db == nil {
+		return errors.New("database is not open")
+	}
+	return a.serve()
 }
